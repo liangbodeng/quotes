@@ -1,0 +1,39 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.2.RELEASE'
+		dependencyManagementVersion = '1.0.1.RELEASE'
+		gradleNodePluginVersion = '1.1.1'
+	}
+	repositories {
+		maven { url "https://plugins.gradle.org/m2/" }
+	}
+	dependencies {
+		classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}",
+			"io.spring.gradle:dependency-management-plugin:${dependencyManagementVersion}",
+			"com.moowork.gradle:gradle-node-plugin:${gradleNodePluginVersion}"
+	}
+}
+
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'eclipse'
+	apply plugin: 'io.spring.dependency-management'
+
+	if (version == 'unspecified') {
+		version = '0.0.1-SNAPSHOT'
+	}
+
+	sourceCompatibility = 1.8
+
+	repositories {
+		mavenCentral()
+	}
+
+	dependencyManagement {
+		imports { mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}") }
+		dependencies {
+			dependency 'org.projectlombok:lombok:1.16.16'
+			dependency 'com.google.guava:guava:21.0'
+		}
+	}
+}

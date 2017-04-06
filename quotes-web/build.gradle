@@ -1,0 +1,72 @@
+apply plugin: 'com.moowork.node'
+
+ext {
+  ngScript = file('node_modules/.bin/ng')
+  ngArgs = properties['args']
+}
+
+node {
+  version = "6.10.1"
+  download = true
+}
+
+task ng(type: NodeTask, dependsOn: 'npmInstall') {
+  script = ngScript
+  args = ngArgs == null ? [] : properties['args'].split(' ').collect()
+
+  doFirst {
+    if (ngArgs == null || ngArgs.trim().isEmpty()) {
+      throw new GradleException(
+        "Project property 'args' is missing or invalid for the ng task\n" +
+        "Usage examples:\n" +
+        "  gradle ng -Pargs=help\n" +
+        "  gradle ng -Pargs='build --prod'"
+      )
+    }
+  }
+}
+
+task ngClean(type: Delete) {
+  delete fileTree('dist')
+}
+clean.dependsOn ngClean
+
+task ngServe(type: NodeTask, dependsOn: 'npmInstall') {
+  script = ngScript
+  args = ['serve']
+}
+
+task ngTest(type: NodeTask, dependsOn: 'npmInstall') {
+  script = ngScript
+  args = ['test', '--code-coverage']
+}
+
+task ngTestOnce(type: NodeTask, dependsOn: 'npmInstall') {
+  script = ngScript
+  args = ['test', '--single-run', '--code-coverage', '--progress=false']
+}
+
+task ngBuildProd(type: NodeTask, dependsOn: 'npmInstall') {
+  script = ngScript
+  args = ['build', '--target=production', '--progress=false']
+  inputs.dir "$projectDir/src"
+  inputs.file "$projectDir/package.json"
+  inputs.file "$projectDir/tsconfig.json"
+  inputs.file "$projectDir/.angular-cli.json"
+  outputs.dir "$projectDir/dist"
+}
+
+task copyProd() {
+  dependsOn ngBuildProd
+
+  doLast {
+    String toPath = "$buildDir/resources/main/META-INF/resources/webjars/${project.name}/latest"
+    String fromPath = "dist"
+
+    copy {
+      into(toPath)
+      from(fromPath)
+    }
+  }
+}
+jar.dependsOn copyProd

@@ -1,0 +1,3 @@
+include 'quotes-common'
+include 'quotes-web'
+include 'quotes-app'

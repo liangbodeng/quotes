@@ -1,0 +1,33 @@
+apply plugin: 'org.springframework.boot'
+
+ext {
+	webDir = 'src/main/resources/static'
+}
+
+configurations {
+	ng2
+}
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter')
+	compile('org.springframework.boot:spring-boot-starter-web')
+	compile project(':quotes-common')
+	compile('com.google.guava:guava')
+
+	runtime('com.h2database:h2')
+
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+
+	ng2 project(':quotes-web')
+}
+
+task extractNg2Files(dependsOn: ':quotes-web:jar') {
+	doLast {
+		copy {
+			into webDir
+			from configurations.ng2.collect { zipTree(it).files }
+			exclude "**/MANIFEST.MF"
+		}
+	}
+}
+processResources.dependsOn extractNg2Files
